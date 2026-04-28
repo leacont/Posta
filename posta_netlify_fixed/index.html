@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Posta</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --lime:#c8f542;--lime-dim:rgba(200,245,66,0.1);--lime-border:rgba(200,245,66,0.25);
+  --bg:#0a0a0a;--surface:#111;--surface2:#181818;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#f0ede8;--text-dim:rgba(240,237,232,0.42);--text-mid:rgba(240,237,232,0.68);
+  --danger:#ff5c5c;--dollar:#60a5fa;
+}
+body{font-family:'DM Sans',sans-serif;background:#050505;color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;}
+.phone{width:390px;min-height:844px;background:var(--bg);border-radius:46px;border:1.5px solid rgba(255,255,255,0.1);overflow:hidden;position:relative;box-shadow:0 0 0 8px #050505,0 40px 100px rgba(0,0,0,0.85);display:flex;flex-direction:column;}
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 28px 8px;font-size:12px;font-weight:500;color:var(--text-mid);flex-shrink:0;}
+.logo-s{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--text);}
+.logo-s span{color:var(--lime);}
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden;animation:fadeIn 0.3s ease;}
+.screen.active{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+.prog-header{padding:0.6rem 1.5rem 0.8rem;border-bottom:0.5px solid var(--border);flex-shrink:0;}
+.prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.step-lbl{font-size:11px;color:var(--text-dim);}
+.prog-bar{height:3px;background:var(--surface2);border-radius:10px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--lime);border-radius:10px;transition:width 0.4s ease;}
+.scroll{flex:1;overflow-y:auto;padding:1.25rem 1.5rem;scrollbar-width:none;}
+.scroll::-webkit-scrollbar{display:none;}
+.eyebrow{font-size:11px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--lime);margin-bottom:5px;}
+.step-title{font-family:'Syne',sans-serif;font-weight:700;font-size:22px;letter-spacing:-0.5px;line-height:1.2;margin-bottom:5px;}
+.step-sub{font-size:13px;color:var(--text-dim);line-height:1.6;font-weight:300;margin-bottom:1.5rem;}
+.field-group{margin-bottom:1.1rem;}
+.field-label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:7px;font-weight:500;}
+.curr-toggle{display:flex;gap:6px;margin-bottom:1.1rem;}
+.curr-btn{flex:1;padding:10px;border-radius:12px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text-mid);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all 0.15s;}
+.curr-btn.ap{background:rgba(200,245,66,0.1);border-color:var(--lime);color:var(--lime);font-weight:500;}
+.curr-btn.ad{background:rgba(96,165,250,0.1);border-color:var(--dollar);color:var(--dollar);font-weight:500;}
+.input-wrap{display:flex;align-items:center;background:var(--surface);border:0.5px solid var(--border2);border-radius:14px;overflow:hidden;transition:border-color 0.2s;}
+.input-wrap:focus-within{border-color:var(--lime);}
+.input-wrap.dw:focus-within{border-color:var(--dollar);}
+.prefix{padding:13px 0 13px 16px;font-size:15px;font-weight:500;}
+.prefix.p{color:var(--lime);}
+.prefix.d{color:var(--dollar);}
+.fi{flex:1;background:transparent;border:none;padding:13px 16px 13px 6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;}
+.fi::placeholder{color:rgba(240,237,232,0.2);}
+.fip{width:100%;background:var(--surface);border:0.5px solid var(--border2);border-radius:14px;padding:13px 16px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color 0.2s;}
+.fip:focus{border-color:var(--lime);}
+.fip::placeholder{color:rgba(240,237,232,0.2);}
+select.fip{cursor:pointer;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1.1rem;}
+.chip{padding:9px 16px;border-radius:100px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text-mid);font-size:13px;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif;}
+.chip.sel{background:var(--lime-dim);border-color:var(--lime);color:var(--lime);font-weight:500;}
+.day-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:1.1rem;}
+.day-btn{aspect-ratio:1;border-radius:9px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text-mid);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-family:'DM Sans',sans-serif;}
+.day-btn.sel{background:var(--lime);border-color:var(--lime);color:#0a0a0a;font-weight:700;}
+.item-card{background:var(--surface);border:0.5px solid var(--border);border-radius:15px;padding:12px 14px;margin-bottom:9px;}
+.item-row{display:flex;align-items:center;justify-content:space-between;}
+.item-left{display:flex;align-items:center;gap:11px;}
+.item-icon{width:36px;height:36px;border-radius:10px;background:var(--lime-dim);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.item-icon.di{background:rgba(96,165,250,0.1);}
+.item-name{font-size:14px;font-weight:500;}
+.item-detail{font-size:12px;color:var(--text-dim);margin-top:2px;}
+.item-amt{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--lime);}
+.item-amt.da{color:var(--dollar);}
+.rm-btn{width:24px;height:24px;border-radius:50%;background:rgba(255,92,92,0.1);border:none;color:var(--danger);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:7px;flex-shrink:0;}
+.add-btn{width:100%;padding:12px;border-radius:13px;border:0.5px dashed var(--border2);background:transparent;color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;margin-bottom:10px;}
+.add-btn:hover{border-color:var(--lime-border);color:var(--lime);background:var(--lime-dim);}
+.btn-primary{width:100%;padding:15px;border-radius:100px;background:var(--lime);color:#0a0a0a;font-family:'DM Sans',sans-serif;font-weight:600;font-size:15px;border:none;cursor:pointer;}
+.btn-skip{width:100%;padding:10px;background:transparent;border:none;color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;margin-top:4px;}
+.bottom-cta{padding:0.75rem 1.5rem 1.75rem;border-top:0.5px solid var(--border);flex-shrink:0;}
+.info-box{background:var(--lime-dim);border:0.5px solid var(--lime-border);border-radius:12px;padding:11px 13px;margin-bottom:12px;}
+.info-box-t{font-size:12px;color:var(--lime);font-weight:500;margin-bottom:3px;}
+.info-box-b{font-size:12px;color:var(--text-dim);line-height:1.6;}
+.dbox{background:rgba(96,165,250,0.08);border:0.5px solid rgba(96,165,250,0.25);border-radius:12px;padding:11px 13px;margin-bottom:12px;}
+.dbox-t{font-size:12px;color:var(--dollar);font-weight:500;margin-bottom:3px;}
+.dbox-b{font-size:12px;color:var(--text-dim);line-height:1.6;}
+.modal-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.55);z-index:98;}
+.modal-overlay.open{display:block;}
+.modal{display:none;position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-radius:22px 22px 0 0;border-top:0.5px solid var(--border2);padding:1.25rem 1.5rem 2rem;z-index:99;animation:slideUp 0.25s ease;}
+.modal.open{display:block;}
+.modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 1.25rem;}
+.modal-title{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;margin-bottom:1rem;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.chat-header{padding:0.75rem 1.5rem;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.chat-avatar{width:36px;height:36px;border-radius:50%;background:var(--lime);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:#0a0a0a;}
+.chat-name{font-size:14px;font-weight:500;}
+.chat-status{font-size:11px;color:var(--lime);}
+.chat-messages{flex:1;overflow-y:auto;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:10px;scrollbar-width:none;}
+.chat-messages::-webkit-scrollbar{display:none;}
+.msg{max-width:82%;padding:10px 14px;border-radius:16px;font-size:13.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
+.msg-bot{background:var(--surface);color:var(--text);align-self:flex-start;border-radius:4px 16px 16px 16px;}
+.msg-user{background:var(--lime);color:#0a0a0a;align-self:flex-end;border-radius:16px 4px 16px 16px;font-weight:500;}
+.typing{display:flex;gap:5px;align-items:center;padding:12px 14px;background:var(--surface);border-radius:4px 16px 16px 16px;align-self:flex-start;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--text-dim);animation:pulse 1.2s ease-in-out infinite;}
+.dot:nth-child(2){animation-delay:0.2s;}
+.dot:nth-child(3){animation-delay:0.4s;}
+@keyframes pulse{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}
+.chat-input-area{padding:0.75rem 1.25rem 1.5rem;border-top:0.5px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;}
+.voice-status{display:none;text-align:center;padding:4px 1.25rem 2px;font-size:12px;color:var(--danger);flex-shrink:0;}
+.chat-input{flex:1;background:var(--surface);border:0.5px solid var(--border2);border-radius:100px;padding:12px 18px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;}
+.send-btn{width:44px;height:44px;border-radius:50%;background:var(--lime);border:none;color:#0a0a0a;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.send-btn:disabled{background:var(--surface);border:0.5px solid var(--border2);color:var(--text-dim);cursor:not-allowed;}
+.icon-btn{width:40px;height:40px;border-radius:50%;background:var(--surface);border:0.5px solid var(--border2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;}
+.icon-btn.rec{background:rgba(255,92,92,0.15);border-color:var(--danger);animation:recP 1s ease-in-out infinite;}
+@keyframes recP{0%,100%{box-shadow:0 0 0 0 rgba(255,92,92,0.3)}50%{box-shadow:0 0 0 8px rgba(255,92,92,0)}}
+.quick-q{padding:10px 14px;border-radius:12px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text-mid);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;text-align:left;width:100%;margin-bottom:7px;}
+.nav-tabs{display:flex;border-top:0.5px solid var(--border);flex-shrink:0;}
+.nav-tab{flex:1;padding:12px 8px;border:none;background:transparent;color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color 0.2s;}
+.nav-tab.active{color:var(--lime);}
+.nav-icon{font-size:18px;}
+.dash-header{padding:0.75rem 1.5rem;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.dash-title{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;}
+.stat-card{background:var(--surface);border:0.5px solid var(--border);border-radius:18px;padding:1.1rem;margin-bottom:11px;}
+.stat-ey{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;}
+.stat-big{font-family:'Syne',sans-serif;font-weight:800;font-size:32px;letter-spacing:-1px;line-height:1;}
+.stat-sub{font-size:12px;color:var(--text-dim);margin-top:5px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:11px;}
+.mini-stat{background:var(--surface);border:0.5px solid var(--border);border-radius:16px;padding:1rem;}
+.mini-lbl{font-size:11px;color:var(--text-dim);margin-bottom:4px;}
+.mini-val{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;}
+.mini-sub{font-size:11px;color:var(--text-dim);margin-top:3px;}
+.list-card{background:var(--surface);border:0.5px solid var(--border);border-radius:16px;padding:1rem;margin-bottom:11px;}
+.list-title{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.list-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;}
+.list-row+.list-row{border-top:0.5px solid var(--border);}
+.list-name{font-size:13px;color:var(--text-mid);}
+.list-amt{font-size:13px;font-weight:500;}
+.pbar{height:6px;background:var(--surface2);border-radius:10px;overflow:hidden;margin-top:12px;}
+.pbar-fill{height:100%;border-radius:10px;transition:width 0.5s ease;}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="status-bar">
+    <span id="clock">9:41</span>
+    <div class="logo-s">Posta<span>.</span></div>
+    <span>🔋</span>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+
+    <!-- S0: NOMBRE -->
+    <div class="screen active" id="s0">
+      <div class="scroll" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">
+        <div style="width:72px;height:72px;background:var(--lime);border-radius:22px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:32px;color:#0a0a0a;margin-bottom:1.5rem;">P</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:28px;letter-spacing:-0.5px;margin-bottom:0.5rem;">Hola. Soy Posta.</div>
+        <div style="font-size:15px;color:var(--text-dim);line-height:1.6;margin-bottom:2.5rem;font-weight:300;max-width:280px;">Tu socio financiero. Te ayudo a entender tu plata y tomar mejores decisiones.</div>
+        <div style="width:100%;text-align:left;margin-bottom:1rem;">
+          <label class="field-label">Como te llamo?</label>
+          <input class="fip" type="text" id="usuario-nombre" placeholder="Tu nombre o como quieras que te diga...">
+        </div>
+        <div style="font-size:12px;color:var(--text-dim);line-height:1.6;">No necesitamos saber quien sos.<br>Solo como llamarte.</div>
+      </div>
+      <div class="bottom-cta">
+        <button class="btn-primary" onclick="goToS1()">Empezar</button>
+      </div>
+    </div>
+
+    <!-- S1: INGRESOS -->
+    <div class="screen" id="s1">
+      <div class="prog-header">
+        <div class="prog-top"><span class="step-lbl">Tus ingresos</span><span class="step-lbl">1 de 5</span></div>
+        <div class="prog-bar"><div class="prog-fill" style="width:20%"></div></div>
+      </div>
+      <div class="scroll">
+        <div class="eyebrow">Ingresos</div>
+        <div class="step-title">Cuando y cuanto cobras?</div>
+        <div class="step-sub">Aproximado esta perfecto. Podes mezclar pesos y dolares.</div>
+        <div class="field-group">
+          <label class="field-label">En que moneda cobras?</label>
+          <div class="curr-toggle">
+            <button class="curr-btn ap" id="ing-p" onclick="setCurr('p')">Pesos</button>
+            <button class="curr-btn" id="ing-d" onclick="setCurr('d')">Dolares</button>
+            <button class="curr-btn" id="ing-m" onclick="setCurr('m')">Mixto</button>
+          </div>
+        </div>
+        <div id="f-pesos" class="field-group">
+          <label class="field-label">Cuanto cobras por mes?</label>
+          <div class="input-wrap"><span class="prefix p">$</span><input class="fi" type="text" inputmode="numeric" id="ing-monto" placeholder="350.000" oninput="fmtI(this)"></div>
+        </div>
+        <div id="f-dollar" class="field-group" style="display:none;">
+          <label class="field-label">Cuanto cobras en dolares?</label>
+          <div class="input-wrap dw"><span class="prefix d">U$D</span><input class="fi" type="text" inputmode="numeric" id="ing-usd" placeholder="1.500" oninput="fmtI(this)"></div>
+        </div>
+        <div id="f-mix" class="field-group" style="display:none;">
+          <label class="field-label">Cuanto en pesos?</label>
+          <div class="input-wrap" style="margin-bottom:8px;"><span class="prefix p">$</span><input class="fi" type="text" inputmode="numeric" id="ing-mix-p" placeholder="200.000" oninput="fmtI(this)"></div>
+          <label class="field-label">Cuanto en dolares?</label>
+          <div class="input-wrap dw"><span class="prefix d">U$D</span><input class="fi" type="text" inputmode="numeric" id="ing-mix-d" placeholder="500" oninput="fmtI(this)"></div>
+        </div>
+        <div id="dolar-badge" style="font-size:12px;color:var(--text-dim);margin-bottom:1rem;padding:8px 12px;background:rgba(96,165,250,0.08);border:0.5px solid rgba(96,165,250,0.2);border-radius:10px;">Cargando dolar blue...</div>
+        <div class="field-group">
+          <label class="field-label">Como cobras?</label>
+          <div class="chips" id="frec-chips">
+            <div class="chip sel" onclick="selChip(this,'frec')">Mensual</div>
+            <div class="chip" onclick="selChip(this,'frec')">Quincenal</div>
+            <div class="chip" onclick="selChip(this,'frec')">Semanal</div>
+            <div class="chip" onclick="selChip(this,'frec')">Variable</div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Que dia del mes cobras?</label>
+          <div class="day-grid" id="day-grid"></div>
+        </div>
+      </div>
+      <div class="bottom-cta">
+        <button class="btn-primary" onclick="goTo('s2')">Siguiente</button>
+        <button class="btn-skip" onclick="goTo('s2')">Lo cargo despues</button>
+      </div>
+    </div>
+
+    <!-- S2: GASTOS FIJOS -->
+    <div class="screen" id="s2">
+      <div class="prog-header">
+        <div class="prog-top"><span class="step-lbl">Gastos fijos</span><span class="step-lbl">2 de 5</span></div>
+        <div class="prog-bar"><div class="prog-fill" style="width:40%"></div></div>
+      </div>
+      <div class="scroll">
+        <div class="eyebrow">Gastos fijos</div>
+        <div class="step-title">Que pagas todos los meses?</div>
+        <div class="step-sub">Podes tener gastos en pesos y dolares.</div>
+        <div id="gastos-list"></div>
+        <button class="add-btn" onclick="openModal('mg')">+ Agregar gasto fijo</button>
+      </div>
+      <div class="bottom-cta">
+        <button class="btn-primary" onclick="goTo('s3')">Siguiente</button>
+        <button class="btn-skip" onclick="goTo('s3')">Lo cargo despues</button>
+      </div>
+    </div>
+
+    <!-- S3: TARJETAS -->
+    <div class="screen" id="s3">
+      <div class="prog-header">
+        <div class="prog-top"><span class="step-lbl">Tarjetas</span><span class="step-lbl">3 de 5</span></div>
+        <div class="prog-bar"><div class="prog-fill" style="width:60%"></div></div>
+      </div>
+      <div class="scroll">
+        <div class="eyebrow">Tarjetas</div>
+        <div class="step-title">Que tarjetas tenes?</div>
+        <div class="step-sub">Cierre, vencimiento y limite. Posta sabe que esta comprometido.</div>
+        <div id="tarjetas-list"></div>
+        <button class="add-btn" onclick="openModal('mt')">+ Agregar tarjeta</button>
+        <div class="info-box">
+          <div class="info-box-t">Cada mes</div>
+          <div class="info-box-b">Cuando cierre tu tarjeta Posta te pide el resumen. Lo procesa sin duplicar los fijos.</div>
+        </div>
+      </div>
+      <div class="bottom-cta">
+        <button class="btn-primary" onclick="goTo('s4')">Siguiente</button>
+        <button class="btn-skip" onclick="goTo('s4')">No tengo tarjetas</button>
+      </div>
+    </div>
+
+    <!-- S4: CUOTAS Y DEUDAS -->
+    <div class="screen" id="s4">
+      <div class="prog-header">
+        <div class="prog-top"><span class="step-lbl">Compromisos</span><span class="step-lbl">4 de 5</span></div>
+        <div class="prog-bar"><div class="prog-fill" style="width:80%"></div></div>
+      </div>
+      <div class="scroll">
+        <div class="eyebrow">Cuotas y deudas</div>
+        <div class="step-title">Tenes algo corriendo?</div>
+        <div class="step-sub">Cuotas en pesos, deudas en dolares, lo que sea.</div>
+        <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px;">Cuotas</div>
+        <div id="cuotas-list"></div>
+        <button class="add-btn" onclick="openModal('mc')">+ Agregar cuota</button>
+        <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px;margin-top:6px;">Deudas</div>
+        <div id="deudas-list"></div>
+        <button class="add-btn" onclick="openModal('md')">+ Agregar deuda</button>
+      </div>
+      <div class="bottom-cta">
+        <button class="btn-primary" onclick="goTo('s5')">Siguiente</button>
+        <button class="btn-skip" onclick="goTo('s5')">No tengo nada</button>
+      </div>
+    </div>
+
+    <!-- S5: LISTO -->
+    <div class="screen" id="s5">
+      <div class="prog-header">
+        <div class="prog-top"><span class="step-lbl">Ultimo paso</span><span class="step-lbl">5 de 5</span></div>
+        <div class="prog-bar"><div class="prog-fill" style="width:100%"></div></div>
+      </div>
+      <div class="scroll" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">
+        <div style="font-size:48px;margin-bottom:1.25rem;">💬</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:21px;letter-spacing:-0.5px;margin-bottom:0.6rem;">Tu socio esta listo</div>
+        <div style="font-size:14px;color:var(--text-dim);line-height:1.6;max-width:280px;margin-bottom:1.75rem;font-weight:300;">Preguntale lo que quieras antes de gastar, salir o tomar cualquier decision.</div>
+        <div style="background:var(--surface);border:0.5px solid var(--border2);border-radius:16px;padding:1rem 1.25rem;width:100%;text-align:left;margin-bottom:1rem;">
+          <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Tu codigo de recuperacion</div>
+          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--lime);letter-spacing:2px;">MATE LUNA VERDE RIO</div>
+          <div style="font-size:12px;color:var(--text-dim);margin-top:6px;line-height:1.5;">Guardalo. Si cambias de celular lo usas para recuperar todo.</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-dim);line-height:1.7;">No sabemos quien sos. Tus datos no se venden.</div>
+      </div>
+      <div class="bottom-cta">
+        <button class="btn-primary" onclick="goTo('sc')">Ir al chat con Posta</button>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="screen" id="sc" style="display:none;">
+      <div class="chat-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="chat-avatar">P</div>
+          <div><div class="chat-name">Posta</div><div class="chat-status">en linea</div></div>
+        </div>
+        <button onclick="switchTab('panel')" style="background:var(--surface);border:0.5px solid var(--border2);border-radius:100px;padding:7px 14px;color:var(--text-mid);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Panel</button>
+      </div>
+      <div class="chat-messages" id="chat-msgs">
+        <div class="msg msg-bot" id="welcome-msg">Hola! Ya se como estas.
+
+Preguntame lo que quieras antes de gastar o decidir algo.</div>
+        <div id="quick-qs">
+          <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;margin-top:4px;">Preguntas frecuentes</div>
+          <button class="quick-q" onclick="sendQ(this)">Como estoy este mes?</button>
+          <button class="quick-q" onclick="sendQ(this)">Me puedo ir de vacaciones?</button>
+          <button class="quick-q" onclick="sendQ(this)">Que me vence esta semana?</button>
+          <button class="quick-q" onclick="sendQ(this)">Como salgo de mis deudas?</button>
+          <button class="quick-q" onclick="sendQ(this)">Me conviene cambiar dolares ahora?</button>
+        </div>
+      </div>
+      <div class="voice-status" id="voice-status">Escuchando... habla en castellano</div>
+      <div class="chat-input-area">
+        <button class="icon-btn" id="mic-btn" onclick="toggleVoice()">🎤</button>
+        <button class="icon-btn" onclick="document.getElementById('cam-input').click()">📷</button>
+        <input type="file" id="cam-input" accept="image/*" capture="environment" style="display:none;" onchange="handlePhoto(this)">
+        <input class="chat-input" id="chat-input" placeholder="Escribi, habla o saca una foto...">
+        <button class="send-btn" id="send-btn" onclick="sendMsg()">&#8594;</button>
+      </div>
+    </div>
+
+    <!-- PANEL -->
+    <div class="screen" id="sp" style="display:none;">
+      <div class="dash-header">
+        <div class="dash-title">Tu panel</div>
+        <button onclick="switchTab('chat')" style="background:var(--lime);border:none;border-radius:100px;padding:7px 16px;color:#0a0a0a;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Chat</button>
+      </div>
+      <div class="scroll" id="dash-content"></div>
+    </div>
+
+  </div>
+
+  <!-- NAV -->
+  <div class="nav-tabs" id="nav-tabs" style="display:none;">
+    <button class="nav-tab active" id="tab-chat" onclick="switchTab('chat')"><span class="nav-icon">💬</span><span>Chat</span></button>
+    <button class="nav-tab" id="tab-panel" onclick="switchTab('panel')"><span class="nav-icon">📊</span><span>Panel</span></button>
+    <button class="nav-tab" id="tab-perfil" onclick="switchTab('perfil')"><span class="nav-icon">👤</span><span>Perfil</span></button>
+  </div>
+
+  <!-- MODAL GASTO -->
+  <div class="modal-overlay" id="ov-mg" onclick="closeModal('mg')"></div>
+  <div class="modal" id="mg">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Agregar gasto fijo</div>
+    <div class="field-group">
+      <label class="field-label">Que es?</label>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px;">
+        <button onclick="document.getElementById('g-nom').value=this.textContent" style="padding:7px 13px;border-radius:100px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text-mid);font-family:DM Sans,sans-serif;font-size:12px;cursor:pointer;">Alquiler</button>
+        <button onclick="document.getElementById('g-nom').value=this.textContent" style="padding:7px 13px;border-radius:100px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text-mid);font-family:DM Sans,sans-serif;font-size:12px;cursor:pointer;">Expensas</button>
+        <button onclick="document.getElementById('g-nom').value=this.textContent" style="padding:7px 13px;border-radius:100px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text-mid);font-family:DM Sans,sans-serif;font-size:12px;cursor:pointer;">Internet</button>
+        <button onclick="document.getElementById('g-nom').value=this.textContent" style="padding:7px 13px;border-radius:100px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text-mid);font-family:DM Sans,sans-serif;font-size:12px;cursor:pointer;">Luz / Gas</button>
+        <button onclick="document.getElementById('g-nom').value=this.textContent" style="padding:7px 13px;border-radius:100px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text-mid);font-family:DM Sans,sans-serif;font-size:12px;cursor:pointer;">Prepaga</button>
+        <button onclick="document.getElementById('g-nom').value=this.textContent" style="padding:7px 13px;border-radius:100px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text-mid);font-family:DM Sans,sans-serif;font-size:12px;cursor:pointer;">Colegio</button>
+        <button onclick="document.getElementById('g-nom').value=this.textContent" style="padding:7px 13px;border-radius:100px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text-mid);font-family:DM Sans,sans-serif;font-size:12px;cursor:pointer;">Gym</button>
+        <button onclick="document.getElementById('g-nom').value=this.textContent" style="padding:7px 13px;border-radius:100px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text-mid);font-family:DM Sans,sans-serif;font-size:12px;cursor:pointer;">Streaming</button>
+      </div>
+      <input class="fip" type="text" id="g-nom" placeholder="O escribi lo que quieras...">
+    </div>
+    <div class="field-group">
+      <label class="field-label">En que moneda?</label>
+      <div class="curr-toggle">
+        <button class="curr-btn ap" id="g-pb" onclick="setGC('p')">Pesos</button>
+        <button class="curr-btn" id="g-db" onclick="setGC('d')">Dolares</button>
+      </div>
+    </div>
+    <div class="field-group"><label class="field-label">Cuanto pagas?</label><div class="input-wrap" id="g-wrap"><span class="prefix p" id="g-pre">$</span><input class="fi" type="text" inputmode="numeric" id="g-monto" placeholder="8.500" oninput="fmtI(this)"></div></div>
+    <div class="field-group"><label class="field-label">Que dia vence?</label><input class="fip" type="number" id="g-dia" placeholder="15" min="1" max="31"></div>
+    <div class="field-group">
+      <label class="field-label">Como lo pagas?</label>
+      <select class="fip" id="g-forma" onchange="onGF()">
+        <option value="debito">Debito automatico</option>
+        <option value="manual">Manual cada mes</option>
+      </select>
+    </div>
+    <div class="info-box" id="g-hint" style="display:none;"><div class="info-box-t">Vinculado a tarjeta</div><div class="info-box-b">Posta lo descuenta al procesar el resumen sin duplicarlo.</div></div>
+    <button class="btn-primary" onclick="addGasto()">Guardar</button>
+  </div>
+
+  <!-- MODAL TARJETA -->
+  <div class="modal-overlay" id="ov-mt" onclick="closeModal('mt')"></div>
+  <div class="modal" id="mt">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Agregar tarjeta</div>
+    <div class="field-group"><label class="field-label">Cual es?</label><select class="fip" id="t-tipo"><option>Visa</option><option>Mastercard</option><option>Naranja</option><option>American Express</option><option>Cabal</option><option>Otra</option></select></div>
+    <div class="field-group"><label class="field-label">Nombre para identificarla (opcional)</label><input class="fip" type="text" id="t-alias" placeholder="Visa Galicia, Master del laburo..."></div>
+    <div class="field-group"><label class="field-label">Limite aproximado</label><div class="input-wrap"><span class="prefix p">$</span><input class="fi" type="text" inputmode="numeric" id="t-lim" placeholder="200.000" oninput="fmtI(this)"></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="field-group"><label class="field-label">Dia de cierre</label><input class="fip" type="number" id="t-cierre" placeholder="15"></div>
+      <div class="field-group"><label class="field-label">Dia de vencimiento</label><input class="fip" type="number" id="t-vto" placeholder="28"></div>
+    </div>
+    <button class="btn-primary" onclick="addTarjeta()">Guardar</button>
+  </div>
+
+  <!-- MODAL CUOTA -->
+  <div class="modal-overlay" id="ov-mc" onclick="closeModal('mc')"></div>
+  <div class="modal" id="mc">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Agregar cuota</div>
+    <div class="field-group"><label class="field-label">Que compraste?</label><input class="fip" type="text" id="c-nom" placeholder="Notebook, Heladera..."></div>
+    <div class="field-group">
+      <label class="field-label">En que moneda?</label>
+      <div class="curr-toggle">
+        <button class="curr-btn ap" id="c-pb" onclick="setCC('p')">Pesos</button>
+        <button class="curr-btn" id="c-db" onclick="setCC('d')">Dolares</button>
+      </div>
+    </div>
+    <div class="field-group"><label class="field-label">Cuanto por mes?</label><div class="input-wrap" id="c-wrap"><span class="prefix p" id="c-pre">$</span><input class="fi" type="text" inputmode="numeric" id="c-monto" placeholder="12.000" oninput="fmtI(this)"></div></div>
+    <div class="field-group"><label class="field-label">Cuantas cuotas quedan?</label><input class="fip" type="number" id="c-meses" placeholder="8"></div>
+    <button class="btn-primary" onclick="addCuota()">Guardar</button>
+  </div>
+
+  <!-- MODAL DEUDA -->
+  <div class="modal-overlay" id="ov-md" onclick="closeModal('md')"></div>
+  <div class="modal" id="md">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Agregar deuda</div>
+    <div class="field-group"><label class="field-label">A quien le debes?</label><input class="fip" type="text" id="d-nom" placeholder="Mi hermano, Banco..."></div>
+    <div class="field-group">
+      <label class="field-label">En que moneda?</label>
+      <div class="curr-toggle">
+        <button class="curr-btn ap" id="d-pb" onclick="setDC('p')">Pesos</button>
+        <button class="curr-btn" id="d-db" onclick="setDC('d')">Dolares</button>
+      </div>
+    </div>
+    <div class="field-group"><label class="field-label">Cuanto?</label><div class="input-wrap" id="d-wrap"><span class="prefix p" id="d-pre">$</span><input class="fi" type="text" inputmode="numeric" id="d-monto" placeholder="30.000" oninput="fmtI(this)"></div></div>
+    <button class="btn-primary" onclick="addDeuda()">Guardar</button>
+  </div>
+
+</div>
+<script>
+// La API key ya no va en el frontend. Se guarda en Netlify como variable de entorno.
+var API_ENDPOINT = '/.netlify/functions/chat';
+
+var ST = {
+  nombre: '',
+  ingreso: { monto: 0, usd: 0, moneda: 'p', frecuencia: 'Mensual', diaCobro: 5 },
+  gastosFijos: [], tarjetas: [], cuotas: [], deudas: [],
+  tipoCambio: 1400,
+  tipoCambioFecha: null
+};
+
+async function fetchDolar() {
+  try {
+    var res = await fetch('https://dolarapi.com/v1/dolares/blue');
+    var data = await res.json();
+    if (data && data.venta) {
+      var sell = data.venta;
+      var buy = data.compra;
+      ST.tipoCambio = Math.round((sell + buy) / 2);
+      ST.tipoCambioFecha = new Date().toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit'});
+      var el = document.getElementById('dolar-badge');
+      if (el) {
+        el.textContent = 'Blue $' + ST.tipoCambio.toLocaleString('es-AR') + ' actualizado ' + ST.tipoCambioFecha;
+        el.style.color = 'var(--dollar)';
+      }
+    }
+  } catch(e) {
+    try {
+      var res2 = await fetch('https://api.bluelytics.com.ar/v2/latest');
+      var data2 = await res2.json();
+      if (data2 && data2.blue) {
+        ST.tipoCambio = Math.round((data2.blue.value_sell + data2.blue.value_buy) / 2);
+        ST.tipoCambioFecha = new Date().toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit'});
+        var el2 = document.getElementById('dolar-badge');
+        if (el2) {
+          el2.textContent = 'Blue $' + ST.tipoCambio.toLocaleString('es-AR') + ' actualizado ' + ST.tipoCambioFecha;
+          el2.style.color = 'var(--dollar)';
+        }
+      }
+    } catch(e2) {
+      var el3 = document.getElementById('dolar-badge');
+      if (el3) el3.textContent = 'Blue $' + ST.tipoCambio.toLocaleString('es-AR') + ' (sin conexion)';
+    }
+  }
+}
+
+fetchDolar();
+setInterval(fetchDolar, 300000);
+var chatHistory = [];
+var gCurr = 'p', cCurr = 'p', dCurr = 'p';
+
+function updateClock() {
+  var now = new Date();
+  document.getElementById('clock').textContent = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+}
+updateClock();
+setInterval(updateClock, 30000);
+
+function fmtI(input) {
+  var raw = input.value.replace(/\./g, '').replace(/[^0-9]/g, '');
+  if (!raw) { input.value = ''; input.dataset.raw = ''; return; }
+  input.dataset.raw = raw;
+  input.value = Number(raw).toLocaleString('es-AR');
+}
+
+function getRaw(id) {
+  var el = document.getElementById(id);
+  if (!el) return 0;
+  return Number(el.dataset.raw || el.value.replace(/\./g, '') || 0);
+}
+
+function fmtAmt(monto, moneda) {
+  return moneda === 'd' ? 'U$D ' + Number(monto).toLocaleString('es-AR') : '$' + Number(monto).toLocaleString('es-AR');
+}
+
+function toARS(monto, moneda) {
+  return moneda === 'd' ? monto * ST.tipoCambio : monto;
+}
+
+function goToS1() {
+  ST.nombre = document.getElementById('usuario-nombre').value.trim() || '';
+  goTo('s1');
+}
+
+function goTo(id) {
+  ST.ingreso.monto = getRaw('ing-monto') || getRaw('ing-mix-p');
+  ST.ingreso.usd = getRaw('ing-usd') || getRaw('ing-mix-d');
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); s.style.display = ''; });
+  var el = document.getElementById(id);
+  el.classList.add('active');
+  if (id === 'sc' || id === 'sp') {
+    document.getElementById('nav-tabs').style.display = 'flex';
+    if (id === 'sc') {
+      switchTab('chat');
+      var wm = document.getElementById('welcome-msg');
+      if (wm && ST.nombre) wm.textContent = 'Hola ' + ST.nombre + '! Ya se como estas.\n\nPreguntame lo que quieras antes de gastar o decidir algo.';
+    } else {
+      switchTab('panel');
+    }
+  }
+}
+
+function switchTab(tab) {
+  ['chat','panel','perfil'].forEach(function(t) { var b = document.getElementById('tab-' + t); if (b) b.classList.remove('active'); });
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); s.style.display = ''; });
+  document.getElementById('nav-tabs').style.display = 'flex';
+  if (tab === 'chat') {
+    document.getElementById('sc').classList.add('active');
+    document.getElementById('tab-chat').classList.add('active');
+    scrollChat();
+  } else if (tab === 'panel') {
+    document.getElementById('sp').classList.add('active');
+    document.getElementById('tab-panel').classList.add('active');
+    renderDash();
+  } else {
+    document.getElementById('s0').classList.add('active');
+    document.getElementById('tab-perfil').classList.add('active');
+  }
+}
+
+var dg = document.getElementById('day-grid');
+for (var _d = 1; _d <= 31; _d++) {
+  (function(day) {
+    var b = document.createElement('button');
+    b.className = 'day-btn' + (day === 5 ? ' sel' : '');
+    b.textContent = day;
+    b.onclick = function() {
+      dg.querySelectorAll('.day-btn').forEach(function(x) { x.classList.remove('sel'); });
+      this.classList.add('sel');
+      ST.ingreso.diaCobro = day;
+    };
+    dg.appendChild(b);
+  })(_d);
+}
+
+function selChip(el, group) {
+  el.closest('.chips').querySelectorAll('.chip').forEach(function(c) { c.classList.remove('sel'); });
+  el.classList.add('sel');
+  if (group === 'frec') ST.ingreso.frecuencia = el.textContent;
+}
+
+function setCurr(c) {
+  ST.ingreso.moneda = c;
+  ['p','d','m'].forEach(function(x) {
+    document.getElementById('ing-' + x).className = 'curr-btn' + (x === c ? (x === 'd' ? ' ad' : ' ap') : '');
+  });
+  document.getElementById('f-pesos').style.display = c === 'p' ? '' : 'none';
+  document.getElementById('f-dollar').style.display = c === 'd' ? '' : 'none';
+  document.getElementById('f-mix').style.display = c === 'm' ? '' : 'none';
+}
+
+function setGC(c) {
+  gCurr = c;
+  document.getElementById('g-pb').className = 'curr-btn' + (c === 'p' ? ' ap' : '');
+  document.getElementById('g-db').className = 'curr-btn' + (c === 'd' ? ' ad' : '');
+  document.getElementById('g-pre').textContent = c === 'p' ? '$' : 'U$D';
+  document.getElementById('g-pre').className = 'prefix ' + c;
+  document.getElementById('g-wrap').className = 'input-wrap' + (c === 'd' ? ' dw' : '');
+}
+
+function setCC(c) {
+  cCurr = c;
+  document.getElementById('c-pb').className = 'curr-btn' + (c === 'p' ? ' ap' : '');
+  document.getElementById('c-db').className = 'curr-btn' + (c === 'd' ? ' ad' : '');
+  document.getElementById('c-pre').textContent = c === 'p' ? '$' : 'U$D';
+  document.getElementById('c-pre').className = 'prefix ' + c;
+  document.getElementById('c-wrap').className = 'input-wrap' + (c === 'd' ? ' dw' : '');
+}
+
+function setDC(c) {
+  dCurr = c;
+  document.getElementById('d-pb').className = 'curr-btn' + (c === 'p' ? ' ap' : '');
+  document.getElementById('d-db').className = 'curr-btn' + (c === 'd' ? ' ad' : '');
+  document.getElementById('d-pre').textContent = c === 'p' ? '$' : 'U$D';
+  document.getElementById('d-pre').className = 'prefix ' + c;
+  document.getElementById('d-wrap').className = 'input-wrap' + (c === 'd' ? ' dw' : '');
+}
+
+function onGF() {
+  var v = document.getElementById('g-forma').value;
+  document.getElementById('g-hint').style.display = (v !== 'debito' && v !== 'manual') ? '' : 'none';
+}
+
+function openModal(id) {
+  if (id === 'mg') refreshTarjetaOpts();
+  document.getElementById(id).classList.add('open');
+  document.getElementById('ov-' + id).classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.getElementById('ov-' + id).classList.remove('open');
+}
+
+function refreshTarjetaOpts() {
+  var sel = document.getElementById('g-forma');
+  while (sel.options.length > 2) sel.remove(2);
+  ST.tarjetas.forEach(function(t) {
+    var opt = document.createElement('option');
+    opt.value = t.nombre;
+    opt.textContent = 'Tarjeta ' + t.nombre;
+    sel.add(opt);
+  });
+}
+
+var ICONS = { 'internet':'📡','alquiler':'🏠','expensa':'🏢','luz':'💡','gas':'💡','prepaga':'🏥','colegio':'📚','gym':'🏋️','stream':'🎬' };
+function getIcon(n) {
+  var low = n.toLowerCase();
+  for (var k in ICONS) { if (low.indexOf(k) >= 0) return ICONS[k]; }
+  return '📌';
+}
+
+function addGasto() {
+  var nom = document.getElementById('g-nom').value.trim();
+  var monto = getRaw('g-monto');
+  if (!nom || !monto) return;
+  ST.gastosFijos.push({ nombre: nom, monto: monto, moneda: gCurr, dia: document.getElementById('g-dia').value || '?', formaPago: document.getElementById('g-forma').value, icon: getIcon(nom) });
+  renderGastos();
+  document.getElementById('g-nom').value = '';
+  document.getElementById('g-monto').value = '';
+  document.getElementById('g-dia').value = '';
+  closeModal('mg');
+}
+
+function addTarjeta() {
+  var tipo = document.getElementById('t-tipo').value;
+  var alias = document.getElementById('t-alias').value.trim();
+  var lim = getRaw('t-lim');
+  if (!lim) return;
+  ST.tarjetas.push({ nombre: alias || tipo, tipo: tipo, limite: lim, cierre: document.getElementById('t-cierre').value || '?', vencimiento: document.getElementById('t-vto').value || '?' });
+  renderTarjetas();
+  document.getElementById('t-alias').value = '';
+  document.getElementById('t-lim').value = '';
+  document.getElementById('t-cierre').value = '';
+  document.getElementById('t-vto').value = '';
+  closeModal('mt');
+}
+
+function addCuota() {
+  var nom = document.getElementById('c-nom').value.trim();
+  var monto = getRaw('c-monto');
+  if (!nom || !monto) return;
+  ST.cuotas.push({ nombre: nom, monto: monto, moneda: cCurr, meses: document.getElementById('c-meses').value || '?' });
+  renderCuotas();
+  document.getElementById('c-nom').value = '';
+  document.getElementById('c-monto').value = '';
+  document.getElementById('c-meses').value = '';
+  closeModal('mc');
+}
+
+function addDeuda() {
+  var nom = document.getElementById('d-nom').value.trim();
+  var monto = getRaw('d-monto');
+  if (!nom || !monto) return;
+  ST.deudas.push({ nombre: nom, monto: monto, moneda: dCurr });
+  renderDeudas();
+  document.getElementById('d-nom').value = '';
+  document.getElementById('d-monto').value = '';
+  closeModal('md');
+}
+
+function mkCard(icon, isDollar, name, detail, amt, moneda, onRemove) {
+  return '<div class="item-card"><div class="item-row"><div class="item-left"><div class="item-icon' + (isDollar ? ' di' : '') + '">' + icon + '</div><div><div class="item-name">' + name + '</div>' + (detail ? '<div class="item-detail">' + detail + '</div>' : '') + '</div></div><div style="display:flex;align-items:center;gap:8px;"><span class="item-amt' + (isDollar ? ' da' : '') + '">' + amt + '</span><button class="rm-btn" onclick="' + onRemove + '">x</button></div></div></div>';
+}
+
+function renderGastos() {
+  document.getElementById('gastos-list').innerHTML = ST.gastosFijos.map(function(g, i) {
+    var fp = g.formaPago === 'debito' ? 'Debito' : g.formaPago === 'manual' ? 'Manual' : 'Tarjeta ' + g.formaPago;
+    return mkCard(g.icon, g.moneda === 'd', g.nombre, 'Dia ' + g.dia + ' - ' + fp, fmtAmt(g.monto, g.moneda), g.moneda, 'ST.gastosFijos.splice(' + i + ',1);renderGastos()');
+  }).join('');
+}
+
+function renderTarjetas() {
+  document.getElementById('tarjetas-list').innerHTML = ST.tarjetas.map(function(t, i) {
+    return mkCard('💳', false, t.nombre, 'Cierra dia ' + t.cierre + ' - Vence dia ' + t.vencimiento, '$' + Math.round(t.limite / 1000) + 'k limite', 'p', 'ST.tarjetas.splice(' + i + ',1);renderTarjetas()');
+  }).join('');
+}
+
+function renderCuotas() {
+  document.getElementById('cuotas-list').innerHTML = ST.cuotas.map(function(c, i) {
+    return mkCard('📦', c.moneda === 'd', c.nombre, c.meses + ' meses restantes', fmtAmt(c.monto, c.moneda) + '/mes', c.moneda, 'ST.cuotas.splice(' + i + ',1);renderCuotas()');
+  }).join('');
+}
+
+function renderDeudas() {
+  document.getElementById('deudas-list').innerHTML = ST.deudas.map(function(d, i) {
+    return mkCard('👤', d.moneda === 'd', d.nombre, 'Sin fecha fija', fmtAmt(d.monto, d.moneda), d.moneda, 'ST.deudas.splice(' + i + ',1);renderDeudas()');
+  }).join('');
+}
+
+function buildPrompt() {
+  var ing = ST.ingreso;
+  var iARS = ing.moneda === 'p' ? ing.monto : ing.moneda === 'd' ? ing.usd * ST.tipoCambio : ing.monto + ing.usd * ST.tipoCambio;
+  var ingDesc = ing.moneda === 'p' ? '$' + ing.monto.toLocaleString('es-AR') + ' pesos'
+    : ing.moneda === 'd' ? 'U$D ' + ing.usd.toLocaleString('es-AR') + ' aprox $' + Math.round(iARS).toLocaleString('es-AR')
+    : '$' + ing.monto.toLocaleString('es-AR') + ' + U$D ' + ing.usd.toLocaleString('es-AR');
+  var gf = ST.gastosFijos.map(function(g) { return g.nombre + ' ' + fmtAmt(g.monto, g.moneda) + ' ' + g.formaPago; }).join(', ') || 'ninguno';
+  var tj = ST.tarjetas.map(function(t) { return t.nombre + ' limite $' + t.limite.toLocaleString('es-AR') + ' cierra dia ' + t.cierre + ' vence dia ' + t.vencimiento; }).join(', ') || 'ninguna';
+  var cu = ST.cuotas.map(function(c) { return c.nombre + ' ' + fmtAmt(c.monto, c.moneda) + '/mes ' + c.meses + ' meses'; }).join(', ') || 'ninguna';
+  var de = ST.deudas.map(function(d) { return d.nombre + ' ' + fmtAmt(d.monto, d.moneda); }).join(', ') || 'ninguna';
+  return 'Sos Posta, un socio financiero para argentinos. Ayudas a entender la economia cotidiana.\n\nNOMBRE: ' + (ST.nombre || 'el usuario') + '. Usalo naturalmente pero no en cada mensaje.\n\nPERFIL:\n- Ingreso: ' + ingDesc + '\n- Cobro: ' + ing.frecuencia + ' dia ' + ing.diaCobro + '\n- TC informal: $' + ST.tipoCambio.toLocaleString('es-AR') + '\n- Gastos fijos: ' + gf + '\n- Tarjetas: ' + tj + '\n- Cuotas: ' + cu + '\n- Deudas: ' + de + '\n\nREGLAS: Hablas como un amigo que sabe de numeros. Nunca juzgas. Espanol rioplatense directo. Numeros concretos. Max 4 lineas salvo que pidan mas. No empiezas con Claro.';
+}
+
+function showKeyModal() {
+  addMsg('assistant', 'Falta configurar la variable ANTHROPIC_API_KEY en Netlify.');
+}
+
+
+function addMsg(role, content) {
+  chatHistory.push({ role: role, content: content });
+  var el = document.getElementById('chat-msgs');
+  var div = document.createElement('div');
+  div.className = 'msg ' + (role === 'user' ? 'msg-user' : 'msg-bot');
+  div.textContent = content;
+  el.appendChild(div);
+  scrollChat();
+}
+
+function showTyping() {
+  var el = document.getElementById('chat-msgs');
+  var div = document.createElement('div');
+  div.className = 'typing';
+  div.id = 'typing';
+  div.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  el.appendChild(div);
+  scrollChat();
+  document.getElementById('send-btn').disabled = true;
+}
+
+function hideTyping() {
+  var t = document.getElementById('typing');
+  if (t) t.remove();
+  document.getElementById('send-btn').disabled = false;
+}
+
+function scrollChat() {
+  var el = document.getElementById('chat-msgs');
+  setTimeout(function() { el.scrollTop = el.scrollHeight; }, 50);
+}
+
+document.getElementById('chat-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') sendMsg();
+});
+
+function sendMsg() {
+  var input = document.getElementById('chat-input');
+  var text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addMsg('user', text);
+  var qq = document.getElementById('quick-qs');
+  if (qq) qq.remove();
+  showTyping();
+  callAI();
+}
+
+function sendQ(btn) {
+  var qq = document.getElementById('quick-qs');
+  if (qq) qq.remove();
+  addMsg('user', btn.textContent);
+  showTyping();
+  callAI();
+}
+
+async function callAI() {
+  try {
+    var msgs = chatHistory.map(function(m) { return { role: m.role, content: m.content }; });
+    var res = await fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system: buildPrompt(), messages: msgs })
+    });
+    var data = await res.json();
+    hideTyping();
+    if (!res.ok || data.error) {
+      addMsg('assistant', data.message || 'Hubo un error conectando con Posta. Revisá la configuración en Netlify.');
+      return;
+    }
+    var reply = data.reply || 'No pude procesar eso.';
+    addMsg('assistant', reply);
+  } catch(e) {
+    hideTyping();
+    addMsg('assistant', 'Problema de conexion. Revisa tu internet e intentalo de nuevo.');
+  }
+}
+
+function handlePhoto(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var b64 = e.target.result.split(',')[1];
+    var mime = file.type;
+    var el = document.getElementById('chat-msgs');
+    var prev = document.createElement('div');
+    prev.style.cssText = 'align-self:flex-end;margin-bottom:10px;';
+    prev.innerHTML = '<img src="' + e.target.result + '" style="max-width:200px;max-height:200px;border-radius:12px;display:block;">';
+    el.appendChild(prev);
+    var qq = document.getElementById('quick-qs');
+    if (qq) qq.remove();
+    scrollChat();
+    showTyping();
+    callAIPhoto(b64, mime);
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+async function callAIPhoto(b64, mime) {
+  try {
+    var res = await fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: buildPrompt() + ' Si recibes imagen: ticket de compra suma total e items; resumen de tarjeta extrae deuda y vencimiento sin duplicar fijos; factura explica si hay algo raro. En castellano rioplatense.',
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: mime, data: b64 } },
+          { type: 'text', text: 'Analiza esta imagen y ayudame a entender que hay aca.' }
+        ]}]
+      })
+    });
+    var data = await res.json();
+    hideTyping();
+    if (!res.ok || data.error) {
+      addMsg('assistant', data.message || 'Problema procesando la imagen. Revisá la configuración en Netlify.');
+      return;
+    }
+    var reply = data.reply || 'No pude leer la imagen.';
+    addMsg('assistant', reply);
+  } catch(e) {
+    hideTyping();
+    addMsg('assistant', 'Problema procesando la imagen. Intentalo de nuevo.');
+  }
+}
+
+var recognition = null;
+var isRec = false;
+
+function toggleVoice() {
+  if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+    alert('Tu navegador no soporta voz. Usa Chrome.');
+    return;
+  }
+  if (isRec) { stopVoice(); } else { startVoice(); }
+}
+
+function startVoice() {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'es-AR';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.onstart = function() {
+    isRec = true;
+    document.getElementById('mic-btn').classList.add('rec');
+    document.getElementById('mic-btn').textContent = 'x';
+    document.getElementById('voice-status').style.display = 'block';
+  };
+  recognition.onresult = function(e) {
+    document.getElementById('chat-input').value = Array.from(e.results).map(function(r) { return r[0].transcript; }).join('');
+  };
+  recognition.onend = function() {
+    stopVoice();
+    var text = document.getElementById('chat-input').value.trim();
+    if (text) setTimeout(sendMsg, 300);
+  };
+  recognition.onerror = function(e) {
+    stopVoice();
+    if (e.error !== 'no-speech') addMsg('assistant', 'No pude escucharte. Intenta de nuevo o escribi tu pregunta.');
+  };
+  recognition.start();
+}
+
+function stopVoice() {
+  isRec = false;
+  if (recognition) recognition.stop();
+  var mb = document.getElementById('mic-btn');
+  if (mb) { mb.classList.remove('rec'); mb.textContent = '🎤'; }
+  document.getElementById('voice-status').style.display = 'none';
+}
+
+function renderDash() {
+  var ing = ST.ingreso;
+  var iARS = ing.moneda === 'p' ? ing.monto : ing.moneda === 'd' ? ing.usd * ST.tipoCambio : ing.monto + ing.usd * ST.tipoCambio;
+  var tF = ST.gastosFijos.reduce(function(a, g) { return a + toARS(g.monto, g.moneda); }, 0);
+  var tC = ST.cuotas.reduce(function(a, c) { return a + toARS(c.monto, c.moneda); }, 0);
+  var tD = ST.deudas.reduce(function(a, d) { return a + toARS(d.monto, d.moneda); }, 0);
+  var libre = iARS - tF - tC;
+  var porc = iARS > 0 ? Math.round(((tF + tC) / iARS) * 100) : 0;
+  var dias = 30 - new Date().getDate();
+  var lc = libre >= 0 ? 'var(--lime)' : 'var(--danger)';
+  var pc = porc > 80 ? 'var(--danger)' : 'var(--lime)';
+  var hasDollar = ing.moneda !== 'p' || ST.gastosFijos.some(function(g) { return g.moneda === 'd'; }) || ST.cuotas.some(function(c) { return c.moneda === 'd'; });
+
+  var h = '<div class="stat-card">'
+    + '<div class="stat-ey">Plata libre este mes</div>'
+    + '<div class="stat-big" style="color:' + lc + ';">$' + Math.round(libre).toLocaleString('es-AR') + '</div>'
+    + '<div class="stat-sub">Para comida, salidas e imprevistos - ' + dias + ' dias restantes</div>'
+    + '<div class="pbar"><div class="pbar-fill" style="width:' + Math.min(porc, 100) + '%;background:' + pc + ';"></div></div>'
+    + '<div style="display:flex;justify-content:space-between;margin-top:6px;">'
+    + '<span style="font-size:11px;color:var(--text-dim);">Comprometido: ' + porc + '%</span>'
+    + '<span style="font-size:11px;color:var(--text-dim);">Cobras dia ' + ing.diaCobro + '</span>'
+    + '</div></div>';
+
+  if (hasDollar) {
+    var fecha = ST.tipoCambioFecha ? 'actualizado ' + ST.tipoCambioFecha : 'cargando...';
+    h += '<div class="dbox" style="display:flex;justify-content:space-between;align-items:center;">'
+      + '<div><div class="dbox-t">Dolar blue hoy</div><div class="dbox-b">$' + ST.tipoCambio.toLocaleString('es-AR') + ' promedio - ' + fecha + '</div></div>'
+      + '<div style="display:flex;gap:6px;align-items:center;">'
+      + '<input id="tc-input" type="text" inputmode="numeric" value="' + ST.tipoCambio.toLocaleString('es-AR') + '" onchange="ST.tipoCambio=Number(this.value.replace(/\\./g,\'\'));renderDash();" style="width:80px;background:rgba(96,165,250,0.1);border:0.5px solid rgba(96,165,250,0.3);border-radius:8px;padding:5px 8px;color:var(--dollar);font-size:13px;font-family:DM Sans,sans-serif;outline:none;text-align:right;">'
+      + '<button onclick="fetchDolar().then(function(){renderDash();})" style="background:rgba(96,165,250,0.15);border:0.5px solid rgba(96,165,250,0.3);border-radius:8px;padding:6px 10px;color:var(--dollar);font-size:12px;cursor:pointer;">&#8635;</button>'
+      + '</div>'
+      + '</div>';
+  }
+
+  h += '<div class="grid2">'
+    + '<div class="mini-stat"><div class="mini-lbl">Ingresos</div><div class="mini-val">$' + Math.round(iARS).toLocaleString('es-AR') + '</div><div class="mini-sub">' + (ing.moneda !== 'p' ? 'Incluye dolares' : 'Dia ' + ing.diaCobro) + '</div></div>'
+    + '<div class="mini-stat"><div class="mini-lbl">Fijos + cuotas</div><div class="mini-val">$' + Math.round(tF + tC).toLocaleString('es-AR') + '</div><div class="mini-sub">' + ST.gastosFijos.length + ' gastos</div></div>'
+    + '</div>';
+
+  if (ST.gastosFijos.length) {
+    h += '<div class="list-card"><div class="list-title">Gastos fijos</div>'
+      + ST.gastosFijos.map(function(g) {
+        return '<div class="list-row"><span class="list-name">' + g.icon + ' ' + g.nombre + '</span><span class="list-amt" style="color:' + (g.moneda === 'd' ? 'var(--dollar)' : 'var(--text)') + ';">' + fmtAmt(g.monto, g.moneda) + '</span></div>';
+      }).join('') + '</div>';
+  }
+
+  if (ST.tarjetas.length) {
+    h += '<div class="list-card"><div class="list-title">Tarjetas</div>'
+      + ST.tarjetas.map(function(t) {
+        return '<div class="list-row"><div><div class="list-name">Tarjeta ' + t.nombre + '</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Vence dia ' + t.vencimiento + '</div></div><span class="list-amt">$' + Math.round(t.limite / 1000) + 'k</span></div>';
+      }).join('') + '</div>';
+  }
+
+  if (ST.deudas.length) {
+    h += '<div class="list-card"><div class="list-title">Deudas</div>'
+      + ST.deudas.map(function(d) {
+        return '<div class="list-row"><span class="list-name">👤 ' + d.nombre + '</span><span class="list-amt" style="color:' + (d.moneda === 'd' ? 'var(--dollar)' : 'var(--text)') + ';">' + fmtAmt(d.monto, d.moneda) + '</span></div>';
+      }).join('');
+    if (tD > 0) h += '<div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:12px;color:var(--text-dim);">Total deudas</span><span style="font-family:Syne,sans-serif;font-weight:700;font-size:15px;color:var(--danger);">$' + Math.round(tD).toLocaleString('es-AR') + '</span></div>';
+    h += '</div>';
+  }
+
+  h += '<div class="info-box" style="text-align:center;"><div class="info-box-t">Tenes dudas?</div><div class="info-box-b" style="margin-bottom:10px;">Preguntale a Posta antes de gastar</div><button onclick="switchTab(\'chat\')" style="background:var(--lime);border:none;border-radius:100px;padding:10px 24px;color:#0a0a0a;font-family:DM Sans,sans-serif;font-weight:600;font-size:14px;cursor:pointer;">Ir al chat</button></div><div style="height:1rem;"></div>';
+
+  document.getElementById('dash-content').innerHTML = h;
+}
+</script>
+</body>
+</html>
